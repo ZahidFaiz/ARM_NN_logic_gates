@@ -1,0 +1,200 @@
+
+
+
+ARM Macro Assembler    Page 1 
+
+
+    1 00000000                 AREA             factorial, CODE, READONLY
+    2 00000000                 EXPORT           __main
+    3 00000000                 IMPORT           printMsg
+    4 00000000         ;IMPORT printMsg2p
+    5 00000000         ;IMPORT printMsg4p
+    6 00000000         
+    7 00000000         
+    8 00000000                 ENTRY
+    9 00000000         __main  FUNCTION
+   10 00000000         
+   11 00000000 EEF2 1A0E       VLDR.F32         S3, =15
+   12 00000004 EEF7 4A00       VLDR.F32         s9, =1      ; for increment
+   13 00000008         ;MOV  R3, =15
+   14 00000008         ;MOV  R2, =1
+   15 00000008         ;MOV  R4, #0x13
+   16 00000008         ;STR  R4,[R3] 
+   17 00000008 EEF7 2A00       VLDR.F32         s5, =1      ; value x
+   18 0000000C         ; testing value for x = 5 
+   19 0000000C F000 F828 
+                       loopa   BL               exp         ;calculating expone
+                                                            ntial result stored
+                                                             in s14
+   20 00000010 EE37 7A24       VADD.F32         s14, s14, s9
+   21 00000014 EE84 7A87       VDIV.F32         s14, s9, s14
+   22 00000018 EE72 2AA4       VADD.F32         S5, S5, s9
+   23 0000001C EE17 0A10       VMOV.F32         r0, s14
+   24 00000020 F7FF FFFE       BL               printMsg
+   25 00000024 EEF4 2A61       VCMP.F32         s5, s3
+   26 00000028 EEF1 FA10       VMRS             APSR_nzcv,FPSCR
+   27 0000002C D1EE            BNE              loopa
+   28 0000002E         
+   29 0000002E F04F 5200       MOV              R2,  #0x20000000 ; Base Address
+                                                            
+   30 00000032 F8D2 0005       LDR              R0, [R2, #0x5] ; 0x5 is the off
+                                                            set  
+   31 00000036 EA4F 0140       LSL              r1, r0, #1  ; shift 1 bit left
+   32 0000003A EA4F 0241       LSL              r2, r1, #1  ; shift 1 bit left
+   33 0000003E F04F 0012       MOV              R0, #0x12
+   34 00000042         ;BL printMsg
+   35 00000042 F04F 0012       MOV              R0, #0x12
+   36 00000046 F04F 0113       MOV              R1, #0x13
+   37 0000004A         ;BL printMsg2p
+   38 0000004A F64A 20AA       MOV              R0, #0xAAAA
+   39 0000004E F64B 31BB       MOV              R1, #0xBBBB
+   40 00000052 F64C 42CC       MOV              R2, #0xCCCC
+   41 00000056 F64D 53DD       MOV              R3, #0xDDDD
+   42 0000005A F64E 64EE       MOV              R4, #0xEEEE
+   43 0000005E         ;BL printMsg4p
+   44 0000005E         
+   45 0000005E         
+   46 0000005E         ;subr   VLDR.F32   r3, = 2 ; value x
+   47 0000005E         ;    VLDR.F32   r0, = 1 ; value y
+   48 0000005E         ; VADD.F32 r0, r3, r0
+   49 0000005E         ;   BX lr
+   50 0000005E E7FE    stop    B                stop        ; stop program
+   51 00000060 EEB7 2A00 
+                       exp     VLDR.F32         s4, = 1     ; Result
+   52 00000064         
+   53 00000064 ED9F 7A11       VLDR.F32         s14, = 0    ; denominator
+
+
+
+ARM Macro Assembler    Page 2 
+
+
+   54 00000068         ;  VLDR.F32   s13, = 0 ; iteration for denomination
+   55 00000068 EEF7 3A00       VLDR.F32         s7, = 1     ; intermediate regi
+                                                            ster a
+   56 0000006C EEB7 4A00       VLDR.F32         s8, = 1     ; flag for the sign
+                                                             
+   57 00000070         
+   58 00000070         ; VADD.F32   s4, s5, s4 ; first number
+   59 00000070 EEB0 0A08       VLDR.F32         s0, =3      ; Number of iterati
+                                                            ons
+   60 00000074         ; This loop will calculate each term one by and 
+   61 00000074         ; either add or substract from the result register s4
+   62 00000074         
+   63 00000074         
+   64 00000074 EE63 3AA2 
+                       loop    VMUL.F32         s7, s7, s5  ;     ; Calculate t
+                                                            he next term of the
+                                                             series 
+   65 00000078 EE37 7A24       VADD.F32         s14, s14, s9 ; increment the it
+                                                            erator value
+   66 0000007C         ;VMUL.F32 s14, s14, s13 ;
+   67 0000007C EEC3 3A87       VDIV.F32         s7, s7, s14 ; divide the denomi
+                                                            nator, and the resu
+                                                            lt will be next ter
+                                                            m
+   68 00000080         
+   69 00000080         ; This s7 register holds the next term of the series whi
+                       ch has to either added or subtracted 
+   70 00000080 EEB4 4A64       VCMP.F32         s8, s9      ; For this s8 is us
+                                                            ed as a flag regist
+                                                            er which toogles be
+                                                            tween 0, 1 
+   71 00000084 EEF1 FA10       VMRS             APSR_nzcv,FPSCR
+   72 00000088 EE32 2A23       VADD.F32         s4, s4, s7  ; then the next ter
+                                                            m is added if the s
+                                                            8 is equal to 0
+   73 0000008C BF12 EE34 
+              4A24             VADDNE.F32       s8, s8, s9
+   74 00000092 EE32 2A63       VSUBEQ.F32       s4, s4, s7  ; then the next ter
+                                                            m is substracted if
+                                                             the s8 is equal to
+                                                             1
+   75 00000096 EE34 4A64       VSUBEQ.F32       s8, s8, s9
+   76 0000009A EE30 0A64       VSUB.F32         s0, s0, s9
+   77 0000009E EEB4 0A64       VCMP.F32         s0, s9
+   78 000000A2 EEF1 FA10       VMRS             APSR_nzcv,FPSCR
+   79 000000A6         
+   80 000000A6 D1E5            BNE              loop
+   81 000000A8 4770            BX               lr
+   82 000000AA                 ENDFUNC
+   83 000000AA                 END
+              00 00 00000000 
+Command Line: --debug --xref --diag_suppress=9931 --cpu=Cortex-M4.fp.sp --apcs=
+interwork --depend=.\objects\first.d -o.\objects\first.o -I.\RTE\_Target_1 -I"C
+:\Users\zahid faiz\AppData\Local\Arm\Packs\ARM\CMSIS\5.7.0\CMSIS\Core\Include" 
+-I"C:\Users\zahid faiz\AppData\Local\Arm\Packs\Keil\STM32F4xx_DFP\2.15.0\Driver
+s\CMSIS\Device\ST\STM32F4xx\Include" --predefine="__EVAL SETA 1" --predefine="_
+_UVISION_VERSION SETA 532" --predefine="_RTE_ SETA 1" --predefine="STM32F407xx 
+SETA 1" --predefine="_RTE_ SETA 1" --list=.\listings\first.lst first.s
+
+
+
+ARM Macro Assembler    Page 1 Alphabetic symbol ordering
+Relocatable symbols
+
+__main 00000000
+
+Symbol: __main
+   Definitions
+      At line 9 in file first.s
+   Uses
+      At line 2 in file first.s
+Comment: __main used once
+exp 00000060
+
+Symbol: exp
+   Definitions
+      At line 51 in file first.s
+   Uses
+      At line 19 in file first.s
+Comment: exp used once
+factorial 00000000
+
+Symbol: factorial
+   Definitions
+      At line 1 in file first.s
+   Uses
+      None
+Comment: factorial unused
+loop 00000074
+
+Symbol: loop
+   Definitions
+      At line 64 in file first.s
+   Uses
+      At line 80 in file first.s
+Comment: loop used once
+loopa 0000000C
+
+Symbol: loopa
+   Definitions
+      At line 19 in file first.s
+   Uses
+      At line 27 in file first.s
+Comment: loopa used once
+stop 0000005E
+
+Symbol: stop
+   Definitions
+      At line 50 in file first.s
+   Uses
+      At line 50 in file first.s
+Comment: stop used once
+6 symbols
+
+
+
+ARM Macro Assembler    Page 1 Alphabetic symbol ordering
+External symbols
+
+printMsg 00000000
+
+Symbol: printMsg
+   Definitions
+      At line 3 in file first.s
+   Uses
+      At line 24 in file first.s
+Comment: printMsg used once
+1 symbol
+344 symbols in table
